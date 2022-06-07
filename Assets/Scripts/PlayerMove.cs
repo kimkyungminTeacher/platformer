@@ -150,6 +150,7 @@ public class PlayerMove : MonoBehaviour
     public void respown()
     {
         rigid.velocity = Vector2.zero;
+        spriteRenderer.flipY = false;
         transform.position = new Vector3(-2, 5, 0);
     }
 }
