@@ -8,15 +8,60 @@ public class PlayerMove : MonoBehaviour
     public float maxSpeed = 3;
     public float jumpPower= 5;
     public GameManager gameManager;
+    public AudioClip audioJump;
+    public AudioClip audioAttack;
+    public AudioClip audioDamaged;
+    public AudioClip audioItem;
+    public AudioClip audioDie;
+    public AudioClip audioFinish;
 
     Rigidbody2D rigid;
     SpriteRenderer spriteRenderer;
     Animator animator;
+    AudioSource audioSource;
+
+    enum PlayerAction {
+        Jump,
+        Attack,
+        Damaged,
+        Item,
+        Die,
+        Finish
+    }
     
+    void PlaySound(PlayerAction action){
+        //audioClip
+        switch(action)
+        {
+            case PlayerAction.Jump :
+                audioSource.clip = audioJump;
+                break;
+            case PlayerAction.Attack :
+                audioSource.clip = audioAttack;
+                break;
+            case PlayerAction.Damaged :
+                audioSource.clip = audioDamaged;
+                break;
+            case PlayerAction.Item :
+                audioSource.clip = audioItem;
+                break;
+            case PlayerAction.Die :
+                audioSource.clip = audioDie;
+                break;
+            case PlayerAction.Finish :
+                audioSource.clip = audioFinish;
+                break; 
+        }
+
+        //play
+        audioSource.Play();
+    }
+
     void Awake() {
         rigid = GetComponent<Rigidbody2D>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         animator = GetComponent<Animator>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update() {
@@ -24,6 +69,7 @@ public class PlayerMove : MonoBehaviour
         if (Input.GetButtonDown("Jump") && animator.GetBool("isJumping") == false) {
             rigid.AddForce(Vector2.up * jumpPower, ForceMode2D.Impulse);
             animator.SetBool("isJumping", true);
+            PlaySound(PlayerAction.Jump);
         }
 
         //Stop 속도
@@ -49,6 +95,8 @@ public class PlayerMove : MonoBehaviour
         spriteRenderer.color = new Color(1, 1, 1, 0.4f);
         spriteRenderer.flipY = true;
         rigid.AddForce(Vector2.up * 7, ForceMode2D.Impulse);
+
+        PlaySound(PlayerAction.Die);
     }
 
     void FixedUpdate() {
@@ -92,11 +140,13 @@ public class PlayerMove : MonoBehaviour
     {
         if (other.gameObject.tag == "Item")
         {
+            PlaySound(PlayerAction.Item);
             gameManager.AddStagePoint(other.gameObject.name);
             other.gameObject.SetActive(false);
         }
         else if (other.gameObject.tag == "Finish")
         {
+            PlaySound(PlayerAction.Finish);
             gameManager.NextStage();
         }
     }
@@ -107,11 +157,14 @@ public class PlayerMove : MonoBehaviour
 
         EnemyMove enemyMove = enemyTransform.GetComponent<EnemyMove>();
         enemyMove.OnDamaged();
+        PlaySound(PlayerAction.Attack);
     }
 
     private void OnDamaged(Transform enemyTransform)
     {
         gameManager.HealthDown();
+
+        PlaySound(PlayerAction.Damaged);
 
         //무적 레이어로 변경
         gameObject.layer = 11;
